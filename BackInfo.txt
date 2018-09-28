@@ -1,0 +1,39 @@
+opengl es provides 3 types of variables:
+-attributes (These are the input values of the glsl program. Just used in vertex shader part!Each time the vertex shader called it will modify the actual VBO (vertex buffer object) values)
+-uniforms ( 'uniforms' made use in both vertex and fragment shaders. They commonly store light position, texture coordinates, and color)
+-varyings ( 'varyings' are used to pass data from the vertex shader to the fragment shader)
+
+ATTRIBUTES, UNFORMS, & VARYINGS -> openGL ES SL
+
+Input geometry + attributes and frame buffers arrive in different channels to the memory.
+
+The memory stores the geometry, the textures, and the buffers.
+
+Create buffer objects
+Shaders - create compile and link
+Attributes - create attributes, enable them, and associate them with buffer objects using JavaScript.
+Uniforms - We can also associate the uniforms using JavaScript
+We can declare TRANSFORMATION MATRICES
+
+When drawElements(), drawArray() are called the vertex shader is executed for each vertex provided in the vertex buffer object.
+It calculates the position for each vertex of a primitive polygon and stores it in a varying GL_POSITION. 
+It also calculates the color, texture coordinates, and vertices that normally associated with the vertex shader.
+
+Primitive assembly
+The triangles are assembled and passed to the rasterizer
+
+Rasterization
+culling and clipping
+Rasterization determines which pixels to keep.
+Culling - state removes all the triangles that facing outwards the camera, or with improper orientation.
+
+Clipping - if the triangle is partly outside of the area, the part of the outside is removed
+
+Fragment shader
+This stage gets the data from:
+	varying from the vertex shader state
+	primities from the rasterization stage
+	calculates the color values for each pixel wetween the vertices
+
+
+

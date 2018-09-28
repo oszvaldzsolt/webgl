@@ -83,6 +83,7 @@ var InitGame = function() {
 		alert('Error validation program ', webgl.getProgramInfoLog(program));
 		return;
 	}
+	
 	//
 	// Create buffer
 	//
@@ -93,4 +94,31 @@ var InitGame = function() {
 		-0.5, -0.5,
 		0.5, -0.5
 	];
+	//This will become the Vertex Buffer Object
+	//It's porpuse is to move the vertex data in the GPU memory
+	var triangleVertexBufferObject = webgl.createBuffer();
+	//Bind buffer binds the VBO to the webgl.Array_Buffer which stores the vertices
+	webgl.bindBuffer(webgl.ARRAY_BUFFER, triangleVertexBufferObject);
+	//This bufferData uses the last binding variable to use a one way
+	//data transfer towards the GPU (Statc_Draw)
+	webgl.bufferData(webgl.ARRAY_BUFFER, new Float32Array(triangleVertices), webgl.STATIC_DRAW);
+	
+	//Gets the location of an attribute (vertex shader input value) from the GLSL code
+	var positionAttributeLocation = webgl.getAttribLocation('vertPosition');
+	
+	webgl.vertexAttribPointer(
+		positionAttributeLocation, //Attribute location
+		2,	//Number of elements per attribute
+		webgl.FLOAT, //type of elements
+		webgl.FALSE, //No idea
+		2 * Float32Array.BYTES_PER_ELEMENT, //Size of the individual vertex
+		0 //Offset
+	);
+	
+	webgl.enableVertexAttribArray(positionAttributeLocation);
+	
+	//
+	//	The main render loop
+	//
+	
 };

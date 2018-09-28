@@ -4,8 +4,13 @@ var vertexShaderText =
 	'',
 	'attribute vec2 vertPosition;',
 	'',
+	'attribute vec3 vertColor;',
+	'',
+	'varying vec3 fragColor;',
+	'',
 	'void main()',
 	'{',
+	'	fragColor = vertColor;',
 	'	gl_Position = vec4(vertPosition, 0.0, 1.0);',
 	'}'
 ].join('\n');
@@ -14,9 +19,11 @@ var fragmentShaderText =
 [
 	'precision mediump float;',
 	'',
+	'varying vec3 fragColor;',
+	'',
 	'void main()',
 	'{',
-	'	gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);',
+	'	gl_FragColor = vec4(fragColor, 1.0);',
 	'}'
 ].join('\n');
 
@@ -89,10 +96,10 @@ var InitGame = function() {
 	//
 	
 	var triangleVertices = 
-	[ // X & Y
-		0.0, 0.5,
-		-0.5, -0.5,
-		0.5, -0.5
+	[ // X & Y			R G B
+		0.0, 0.5,		0.0, 0.0, 1.0,
+		-0.5, -0.5,		0.0, 1.0, 0.0,
+		0.5, -0.5,		1.0, 0.0, 0.0
 	];
 	//This will become the Vertex Buffer Object
 	//It's porpuse is to move the vertex data in the GPU memory
@@ -105,18 +112,28 @@ var InitGame = function() {
 	
 	//Gets the location of an attribute (vertex shader input value) from the GLSL code
 	var positionAttributeLocation = webgl.getAttribLocation(program, 'vertPosition');
+	var colorAttributeLocation = webgl.getAttribLocation(program, 'vertColor');
 	
 	webgl.vertexAttribPointer(
 		positionAttributeLocation, //Attribute location
 		2,	//Number of elements per attribute
 		webgl.FLOAT, //type of elements
 		webgl.FALSE, //No idea
-		2 * Float32Array.BYTES_PER_ELEMENT, //Size of the individual vertex
+		5 * Float32Array.BYTES_PER_ELEMENT, //Size of the individual vertex
 		0 //Offset
 	);
 	
+	webgl.vertexAttribPointer(
+		colorAttributeLocation, //Attribute location
+		3,	//Number of elements per attribute
+		webgl.FLOAT, //type of elements
+		webgl.FALSE, //No idea
+		5 * Float32Array.BYTES_PER_ELEMENT, //Size of the individual vertex
+		2 * Float32Array.BYTES_PER_ELEMENT //Offset
+	);
+	//We need to enable the vertex attributes
 	webgl.enableVertexAttribArray(positionAttributeLocation);
-	
+	webgl.enableVertexAttribArray(colorAttributeLocation);
 	//
 	//	The main render loop
 	//

@@ -104,7 +104,7 @@ var InitGame = function() {
 	webgl.bufferData(webgl.ARRAY_BUFFER, new Float32Array(triangleVertices), webgl.STATIC_DRAW);
 	
 	//Gets the location of an attribute (vertex shader input value) from the GLSL code
-	var positionAttributeLocation = webgl.getAttribLocation('vertPosition');
+	var positionAttributeLocation = webgl.getAttribLocation(program, 'vertPosition');
 	
 	webgl.vertexAttribPointer(
 		positionAttributeLocation, //Attribute location
@@ -120,5 +120,6 @@ var InitGame = function() {
 	//
 	//	The main render loop
 	//
-	
+	webgl.useProgram(program);
+	webgl.drawArrays(webgl.TRIANGLES, 0, 3); //Zero stands for skipping, how many vertices we want to draw
 };

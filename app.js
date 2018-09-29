@@ -2,16 +2,20 @@ var vertexShaderText =
 [
 	'precision mediump float;',
 	'',
-	'attribute vec2 vertPosition;',
+	'attribute vec3 vertPosition;',
 	'',
 	'attribute vec3 vertColor;',
 	'',
 	'varying vec3 fragColor;',
 	'',
+	'uniform mat4 mWorld;',
+	'uniform mat4 mView;',
+	'uniform mat4 mProj;',
+	'',
 	'void main()',
 	'{',
 	'	fragColor = vertColor;',
-	'	gl_Position = vec4(vertPosition, 0.0, 1.0);',
+	'	gl_Position = mProj * mView * mWorld * vec4(vertPosition, 1.0);',
 	'}'
 ].join('\n');
 
@@ -96,10 +100,10 @@ var InitGame = function() {
 	//
 	
 	var triangleVertices = 
-	[ // X & Y			R G B
-		0.0, 0.5,		0.0, 0.0, 1.0,
-		-0.5, -0.5,		0.0, 1.0, 0.0,
-		0.5, -0.5,		1.0, 0.0, 0.0
+	[ // X & Y & Z			R G B
+		0.0, 0.5, 0.0,		0.0, 0.0, 1.0,
+		-0.5, -0.5, 0.0,	0.0, 1.0, 0.0,
+		0.5, -0.5, 0.0,		1.0, 0.0, 0.0
 	];
 	//This will become the Vertex Buffer Object
 	//It's porpuse is to move the vertex data in the GPU memory
@@ -116,10 +120,10 @@ var InitGame = function() {
 	
 	webgl.vertexAttribPointer(
 		positionAttributeLocation, //Attribute location
-		2,	//Number of elements per attribute
+		3,	//Number of elements per attribute
 		webgl.FLOAT, //type of elements
 		webgl.FALSE, //No idea
-		5 * Float32Array.BYTES_PER_ELEMENT, //Size of the individual vertex
+		6 * Float32Array.BYTES_PER_ELEMENT, //Size of the individual vertex
 		0 //Offset
 	);
 	
@@ -128,15 +132,36 @@ var InitGame = function() {
 		3,	//Number of elements per attribute
 		webgl.FLOAT, //type of elements
 		webgl.FALSE, //No idea
-		5 * Float32Array.BYTES_PER_ELEMENT, //Size of the individual vertex
-		2 * Float32Array.BYTES_PER_ELEMENT //Offset
+		6 * Float32Array.BYTES_PER_ELEMENT, //Size of the individual vertex
+		3 * Float32Array.BYTES_PER_ELEMENT //Offset
 	);
 	//We need to enable the vertex attributes
 	webgl.enableVertexAttribArray(positionAttributeLocation);
 	webgl.enableVertexAttribArray(colorAttributeLocation);
+	
+	webgl.useProgram(program);
+	
+	var matWorldUniformLocation = webgl.getUniformLocation(program, 'mWorld');
+	var matViewUniformLocation = webgl.getUniformLocation(program, 'mView');
+	var matProjUniformLocation = webgl.getUniformLocation(program, 'mProj');
+	
+	//Initialize the matrices
+	var worldMatrix = new Float32Array(16);
+	var viewMatrix = new Float32Array(16);
+	var projMatrix = new Float32Array(16);
+	//Make them identity matrices
+	mat4.identity(worldMatrix);
+	mat4.lookAt(viewMatrix, [0, 0, -5], [0, 0, 0], [0, 1, 0]);
+	mat4.perspective(projMatrix, glMatrix.toRadian(45), game_canvas.width / game_canvas.height, 0.1, 1000.0);
+	//Copy the value back to vertex shader with uniform value
+	//(4*4 matrix therefore the uniformMatrix4fv (f - float | v - vector))
+	webgl.uniformMatrix4fv(matWorldUniformLocation, webgl.FALSE, worldMatrix);
+	webgl.uniformMatrix4fv(matViewUniformLocation, webgl.FALSE, viewMatrix);
+	webgl.uniformMatrix4fv(matProjUniformLocation, webgl.FALSE, projMatrix);
+	
 	//
 	//	The main render loop
 	//
-	webgl.useProgram(program);
+	
 	webgl.drawArrays(webgl.TRIANGLES, 0, 3); //Zero stands for skipping, how many vertices we want to draw
 };

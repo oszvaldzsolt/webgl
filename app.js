@@ -159,9 +159,30 @@ var InitGame = function() {
 	webgl.uniformMatrix4fv(matViewUniformLocation, webgl.FALSE, viewMatrix);
 	webgl.uniformMatrix4fv(matProjUniformLocation, webgl.FALSE, projMatrix);
 	
+	var xRotationMatrix = new Float32Array(16);
+	var yRotationMatrix = new Float32Array(16);
+	
 	//
 	//	The main render loop
 	//
 	
-	webgl.drawArrays(webgl.TRIANGLES, 0, 3); //Zero stands for skipping, how many vertices we want to draw
+	var identityMatrix = new Float32Array(16);
+	mat4.identity(identityMatrix);
+	var angle = 0;
+	var loop = main() {
+		angle = performance.now() / 1000 / 6 * 2 * Math.PI;
+		mat4.rotate(yRotationMatrix, identityMatrix, angle, [0, 1, 0]);
+		mat4.rotate(xRotationMatrix, identityMatrix, angle / 4, [1, 0, 0]);
+		mat4.mul(worldMatrix, yRotationMatrix, xRotationMatrix);
+		webgl.uniformMatrix4fv(matWorldUniformLocation, webgl.FALSE, worldMatrix);
+		
+		webgl.clearColor(0.75,0.85,0.8,1.0);
+		webgl.clear(webgl.DEPTH_BUFFER_BIT | webgl.COLOR_BUFFER_BIT);
+		webgl.drawElements(webgl.TRIANGLES, boxIndices.length, webgl.UNSIGNED_SHORT, 0);
+		
+		requestAnimationFrame(loop);
+		
+		}
+	
+	requestAnimationFrame(loop);
 };

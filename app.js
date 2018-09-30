@@ -56,7 +56,11 @@ var InitGame = function() {
 	/*game_canvas.width = window.innerWidth;
 	game_canvas.height = window.innerHeight;
 	webgl.viewport(0, 0, window.innerWidth, window.innerHeight);*/
-	
+	webgl.enable(webgl.DEPTH_TEST);
+	webgl.enable(webgl.CULL_FACE);
+	webgl.frontFace(webgl.CCW);
+	webgl.cullFace(webgl.BACK);
+
 	webgl.clearColor(0.75, 0.85, 0.8, 1.0);
 	webgl.clear(webgl.COLOR_BUFFER_BIT | webgl.DEPTH_BUFFER_BIT);
 	
@@ -99,21 +103,85 @@ var InitGame = function() {
 	// Create buffer
 	//
 	
-	var triangleVertices = 
-	[ // X & Y & Z			R G B
-		0.0, 0.5, 0.0,		0.0, 0.0, 1.0,
-		-0.5, -0.5, 0.0,	0.0, 1.0, 0.0,
-		0.5, -0.5, 0.0,		1.0, 0.0, 0.0
+	var boxVertices = 
+	[ // X, Y, Z           R, G, B
+		// Top
+		-1.0, 1.0, -1.0,   0.5, 0.5, 0.5,
+		-1.0, 1.0, 1.0,    0.5, 0.5, 0.5,
+		1.0, 1.0, 1.0,     0.5, 0.5, 0.5,
+		1.0, 1.0, -1.0,    0.5, 0.5, 0.5,
+
+		// Left
+		-1.0, 1.0, 1.0,    0.75, 0.25, 0.5,
+		-1.0, -1.0, 1.0,   0.75, 0.25, 0.5,
+		-1.0, -1.0, -1.0,  0.75, 0.25, 0.5,
+		-1.0, 1.0, -1.0,   0.75, 0.25, 0.5,
+
+		// Right
+		1.0, 1.0, 1.0,    0.25, 0.25, 0.75,
+		1.0, -1.0, 1.0,   0.25, 0.25, 0.75,
+		1.0, -1.0, -1.0,  0.25, 0.25, 0.75,
+		1.0, 1.0, -1.0,   0.25, 0.25, 0.75,
+
+		// Front
+		1.0, 1.0, 1.0,    1.0, 0.0, 0.15,
+		1.0, -1.0, 1.0,    1.0, 0.0, 0.15,
+		-1.0, -1.0, 1.0,    1.0, 0.0, 0.15,
+		-1.0, 1.0, 1.0,    1.0, 0.0, 0.15,
+
+		// Back
+		1.0, 1.0, -1.0,    0.0, 1.0, 0.15,
+		1.0, -1.0, -1.0,    0.0, 1.0, 0.15,
+		-1.0, -1.0, -1.0,    0.0, 1.0, 0.15,
+		-1.0, 1.0, -1.0,    0.0, 1.0, 0.15,
+
+		// Bottom
+		-1.0, -1.0, -1.0,   0.5, 0.5, 1.0,
+		-1.0, -1.0, 1.0,    0.5, 0.5, 1.0,
+		1.0, -1.0, 1.0,     0.5, 0.5, 1.0,
+		1.0, -1.0, -1.0,    0.5, 0.5, 1.0,
 	];
+
+	var boxIndices =
+	[
+		// Top
+		0, 1, 2,
+		0, 2, 3,
+
+		// Left
+		5, 4, 6,
+		6, 4, 7,
+
+		// Right
+		8, 9, 10,
+		8, 10, 11,
+
+		// Front
+		13, 12, 14,
+		15, 14, 12,
+
+		// Back
+		16, 17, 18,
+		16, 18, 19,
+
+		// Bottom
+		21, 20, 22,
+		22, 20, 23
+	];
+	
 	//This will become the Vertex Buffer Object
 	//It's porpuse is to move the vertex data in the GPU memory
-	var triangleVertexBufferObject = webgl.createBuffer();
+	var boxVertexBufferObject = webgl.createBuffer();
 	//Bind buffer binds the VBO to the webgl.Array_Buffer which stores the vertices
-	webgl.bindBuffer(webgl.ARRAY_BUFFER, triangleVertexBufferObject);
+	webgl.bindBuffer(webgl.ARRAY_BUFFER, boxVertexBufferObject);
 	//This bufferData uses the last binding variable to use a one way
 	//data transfer towards the GPU (Statc_Draw)
-	webgl.bufferData(webgl.ARRAY_BUFFER, new Float32Array(triangleVertices), webgl.STATIC_DRAW);
+	webgl.bufferData(webgl.ARRAY_BUFFER, new Float32Array(boxVertices), webgl.STATIC_DRAW);
 	
+	var boxIndexBufferObject = webgl.createBuffer();
+	webgl.bindBuffer(webgl.ELEMENT_ARRAY_BUFFER, boxIndexBufferObject);
+	webgl.bufferData(webgl.ELEMENT_ARRAY_BUFFER, new Uint16Array(boxIndices), webgl.STATIC_DRAW);
+
 	//Gets the location of an attribute (vertex shader input value) from the GLSL code
 	var positionAttributeLocation = webgl.getAttribLocation(program, 'vertPosition');
 	var colorAttributeLocation = webgl.getAttribLocation(program, 'vertColor');
@@ -160,6 +228,9 @@ var InitGame = function() {
 	webgl.uniformMatrix4fv(matViewUniformLocation, webgl.FALSE, viewMatrix);
 	webgl.uniformMatrix4fv(matProjUniformLocation, webgl.FALSE, projMatrix);
 	
+	var yRotationMatrix = new Float32Array(16);
+	var xRotationMatrix = new Float32Array(16);
+
 	//
 	//	The main render loop
 	//
@@ -170,13 +241,15 @@ var InitGame = function() {
 		angle = performance.now() / 100 / 6 / Math.PI * 2;
 		//The worldMatrix will be the output
 		//The identity matrix will be rotated with angle by the 'y' axis
-		mat4.rotate(worldMatrix, identityMatrix, angle, [0, 1, 0]);
+		mat4.rotate(yRotationMatrix, identityMatrix, angle, [0, 1, 0]);
+		mat4.rotate(xRotationMatrix, identityMatrix, angle/4, [1, 0, 0]);
+		mat4.mul(worldMatrix, yRotationMatrix, xRotationMatrix);
 		webgl.uniformMatrix4fv(matWorldUniformLocation, webgl.FALSE, worldMatrix);
 
 		webgl.clearColor(0.75, 0.85, 0.8, 1.0);
 		webgl.clear(webgl.COLOR_BUFFER_BIT | webgl.DEPTH_BUFFER_BIT);
 
-		webgl.drawArrays(webgl.TRIANGLES, 0, 3); //Zero stands for skipping, how many vertices we want to draw
+		webgl.drawElements(webgl.TRIANGLES, boxIndices.length, webgl.UNSIGNED_SHORT, 0); //Zero stands for skipping, how many vertices we want to draw
 
 		requestAnimationFrame(loop);
 	}

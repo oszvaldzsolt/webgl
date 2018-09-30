@@ -159,7 +159,7 @@ var InitGame = function() {
 	webgl.uniformMatrix4fv(matWorldUniformLocation, webgl.FALSE, worldMatrix);
 	webgl.uniformMatrix4fv(matViewUniformLocation, webgl.FALSE, viewMatrix);
 	webgl.uniformMatrix4fv(matProjUniformLocation, webgl.FALSE, projMatrix);
-
+	
 	//
 	//	The main render loop
 	//
@@ -180,5 +180,6 @@ var InitGame = function() {
 
 		requestAnimationFrame(loop);
 	}
+
 	requestAnimationFrame(loop);
 };

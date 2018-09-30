@@ -155,13 +155,30 @@ var InitGame = function() {
 	mat4.perspective(projMatrix, glMatrix.toRadian(45), game_canvas.width / game_canvas.height, 0.1, 1000.0);
 	//Copy the value back to vertex shader with uniform value
 	//(4*4 matrix therefore the uniformMatrix4fv (f - float | v - vector))
+	
 	webgl.uniformMatrix4fv(matWorldUniformLocation, webgl.FALSE, worldMatrix);
 	webgl.uniformMatrix4fv(matViewUniformLocation, webgl.FALSE, viewMatrix);
 	webgl.uniformMatrix4fv(matProjUniformLocation, webgl.FALSE, projMatrix);
-	
+
 	//
 	//	The main render loop
 	//
-	
-	webgl.drawArrays(webgl.TRIANGLES, 0, 3); //Zero stands for skipping, how many vertices we want to draw
+	var identityMatrix = new Float32Array(16);
+	mat4.identity(identityMatrix);
+	var angle = 0;
+	var loop = function() {
+		angle = performance.now() / 100 / 6 / Math.PI * 2;
+		//The worldMatrix will be the output
+		//The identity matrix will be rotated with angle by the 'y' axis
+		mat4.rotate(worldMatrix, identityMatrix, angle, [0, 1, 0]);
+		webgl.uniformMatrix4fv(matWorldUniformLocation, webgl.FALSE, worldMatrix);
+
+		webgl.clearColor(0.75, 0.85, 0.8, 1.0);
+		webgl.clear(webgl.COLOR_BUFFER_BIT | webgl.DEPTH_BUFFER_BIT);
+
+		webgl.drawArrays(webgl.TRIANGLES, 0, 3); //Zero stands for skipping, how many vertices we want to draw
+
+		requestAnimationFrame(loop);
+	}
+	requestAnimationFrame(loop);
 };
